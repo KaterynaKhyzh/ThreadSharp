@@ -75,11 +75,11 @@ class ThreadManager
 
         for (int i = 0; i < numThreads; i++)
         {
-            Console.WriteLine($"Parameters for thread  #{i + 1}:");
+            Console.WriteLine($"Parameters for thread #{i + 1}:");
             Console.Write("Step: ");
             int step = int.Parse(Console.ReadLine());
 
-            Console.Write(" Duration (in minutes): ");
+            Console.Write("Duration (in minutes): ");
             double durationMinutes = double.Parse(Console.ReadLine());
 
             int durationMilliseconds = (int)(durationMinutes * 60 * 1000);
@@ -100,28 +100,36 @@ class ThreadManager
         controlThread.Join();
 
         foreach (var thread in threads)
-        { 
             thread.Join();
-        }
-
 
         Console.WriteLine("All threads have completed.");
     }
 
     private void OperationTime()
     {
+        var threadSchedule = new List<(SequenceSumThread thread, int stopTime)>();
         for (int i = 0; i < threads.Count; i++)
         {
-            int index = i; 
-            new Thread(() =>
+            threadSchedule.Add((threads[i], stopTimes[i]));
+        }
+
+        threadSchedule.Sort((a, b) => a.stopTime.CompareTo(b.stopTime));
+
+        int previousTime = 0;
+
+        foreach (var (thread, stopTime) in threadSchedule)
+        {
+            int sleepTime = stopTime - previousTime;
+            if (sleepTime > 0)
             {
-                Thread.Sleep(stopTimes[index]);
-                threads[index].Stop();
-            }).Start();
+                Thread.Sleep(sleepTime);
+            }
+            thread.Stop();
+            previousTime = stopTime;
         }
     }
-
 }
+
 
 class Program
 {
